@@ -1,2 +1,2 @@
-# SynergySphere-
+# SynergySphere
  Advanced Team  Collaboration Platform
