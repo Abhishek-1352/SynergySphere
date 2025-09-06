@@ -114,7 +114,7 @@ const [user, setUser] = useState(() => {
 
       
       {/* Header */}
-      <header className="flex justify-between items-center mb-6">
+      {/* <header className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800">SynergySphere — Projects</h1>
         <button
           onClick={logout}
@@ -122,7 +122,7 @@ const [user, setUser] = useState(() => {
         >
           Logout
         </button>
-      </header>
+      </header> */}
 
       {/* Create Project Card */}
       <div className="bg-white shadow-md rounded-xl p-6 mb-6 animate-fadeIn">
@@ -208,7 +208,7 @@ const [user, setUser] = useState(() => {
                       <button
                         onClick={() => {
                           setAddMemberProject(null);
-                          setMemberEmail("");
+                          setMemberEmail("")
                         }}
                         className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-3 py-1 rounded-lg transition-transform transform hover:scale-105"
                       >
