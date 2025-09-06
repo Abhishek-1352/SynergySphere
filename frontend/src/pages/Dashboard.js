@@ -5,7 +5,10 @@ import axios from "../api/axios";
 import Navbar from "../components/Navbar";
 
 export default function Dashboard() {
-
+const [user, setUser] = useState(() => {
+  const savedUser = localStorage.getItem("user");
+  return savedUser ? JSON.parse(savedUser) : null;
+});
 
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -106,6 +109,9 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
+
+      <Navbar user={user} />
+
       
       {/* Header */}
       <header className="flex justify-between items-center mb-6">
