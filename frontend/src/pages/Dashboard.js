@@ -2,22 +2,17 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "../api/axios";
-
-/**
- * Dashboard
- * - Lists projects the logged-in user is a member of
- * - Allows creating a new project
- * - Shows member count and progress % (based on tasks Done)
- * - Allows adding a member to a project by email
- */
+import Navbar from "../components/Navbar";
 
 export default function Dashboard() {
+
+
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
-  const [progressMap, setProgressMap] = useState({}); // { projectId: { done, total, pct } }
-  const [addMemberProject, setAddMemberProject] = useState(null); // projectId currently showing add-member input
+  const [progressMap, setProgressMap] = useState({});
+  const [addMemberProject, setAddMemberProject] = useState(null);
   const [memberEmail, setMemberEmail] = useState("");
   const navigate = useNavigate();
 
@@ -31,7 +26,6 @@ export default function Dashboard() {
     try {
       const res = await axios.get("/projects");
       setProjects(res.data || []);
-      // load progress for each project
       loadProgressForProjects(res.data || []);
     } catch (err) {
       handleRequestError(err);
@@ -45,10 +39,8 @@ export default function Dashboard() {
       setProgressMap({});
       return;
     }
-
     try {
       const promises = projectsList.map(async (p) => {
-        // API: GET /tasks/:projectId
         const r = await axios.get(`/tasks/${p._id}`);
         const tasks = r.data || [];
         const total = tasks.length;
@@ -63,7 +55,6 @@ export default function Dashboard() {
       setProgressMap(map);
     } catch (err) {
       console.error("Failed to load project progress", err);
-      // not fatal: leave progressMap as-is or empty
     }
   }
 
@@ -74,7 +65,6 @@ export default function Dashboard() {
       const res = await axios.post("/projects", { name: newName.trim() });
       const created = res.data;
       setProjects((prev) => [created, ...prev]);
-      // fetch progress for new project (likely 0)
       setProgressMap((prev) => ({ ...prev, [created._id]: { total: 0, done: 0, pct: 0 } }));
       setNewName("");
     } catch (err) {
@@ -88,7 +78,6 @@ export default function Dashboard() {
     if (!memberEmail.trim()) return alert("Enter member email");
     try {
       const res = await axios.post(`/projects/${projectId}/add-member`, { email: memberEmail.trim() });
-      // response is populated project
       const updatedProject = res.data;
       setProjects((prev) => prev.map((p) => (p._id === projectId ? updatedProject : p)));
       setMemberEmail("");
@@ -108,7 +97,6 @@ export default function Dashboard() {
     const status = err?.response?.status;
     const msg = err?.response?.data?.error || err.message || "Request failed";
     if (status === 401) {
-      // token invalid/expired — redirect to login
       localStorage.removeItem("token");
       navigate("/");
     } else {
@@ -117,69 +105,84 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-4" style={{ maxWidth: 1100, margin: "0 auto" }}>
-      <header className="flex between" style={{ alignItems: "center", marginBottom: 16 }}>
-        <h1 style={{ margin: 0 }}>SynergySphere — Projects</h1>
-        <div>
-          <button onClick={logout} style={{ padding: "8px 12px", borderRadius: 6 }}>
-            Logout
-          </button>
-        </div>
+    <div className="min-h-screen bg-gray-50 p-6">
+      
+      {/* Header */}
+      <header className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-800">SynergySphere — Projects</h1>
+        <button
+          onClick={logout}
+          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-transform transform hover:scale-105"
+        >
+          Logout
+        </button>
       </header>
 
-      <section className="card" style={{ marginBottom: 18 }}>
-        <h3 style={{ marginTop: 0 }}>Create New Project</h3>
-        <div style={{ display: "flex", gap: 8 }}>
+      {/* Create Project Card */}
+      <div className="bg-white shadow-md rounded-xl p-6 mb-6 animate-fadeIn">
+        <h3 className="text-xl font-semibold mb-4">Create New Project</h3>
+        <div className="flex gap-3">
           <input
             placeholder="Project name"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            style={{ flex: 1, padding: 8 }}
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 outline-none transition"
           />
-          <button onClick={createProject} disabled={creating} style={{ padding: "8px 14px" }}>
+          <button
+            onClick={createProject}
+            disabled={creating}
+            className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition-transform transform hover:scale-105"
+          >
             {creating ? "Creating..." : "Create"}
           </button>
         </div>
-      </section>
+      </div>
 
+      {/* Projects List */}
       <section>
-        <h3 style={{ marginTop: 0 }}>{loading ? "Loading projects..." : `Your Projects (${projects.length})`}</h3>
+        <h3 className="text-xl font-semibold mb-4">
+          {loading ? "Loading projects..." : `Your Projects (${projects.length})`}
+        </h3>
 
         {projects.length === 0 && !loading && (
-          <div className="card">No projects yet — create one using the form above.</div>
+          <div className="bg-white shadow-md rounded-xl p-4 animate-fadeIn">
+            No projects yet — create one using the form above.
+          </div>
         )}
 
-        <div className="grid" style={{ marginTop: 8 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {projects.map((p) => {
             const prog = progressMap[p._id] || { total: 0, done: 0, pct: 0 };
             return (
-              <div key={p._id} className="card clickable" style={{ padding: 12 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <div
+                key={p._id}
+                className="bg-white shadow-md rounded-xl p-4 hover:shadow-xl transition-transform transform hover:scale-105 animate-fadeIn"
+              >
+                {/* Project Header */}
+                <div className="flex justify-between items-start mb-3">
                   <div>
-                    <Link to={`/project/${p._id}`} style={{ textDecoration: "none", color: "inherit" }}>
-                      <h4 style={{ margin: "0 0 6px 0" }}>{p.name}</h4>
+                    <Link to={`/project/${p._id}`} className="text-lg font-semibold hover:text-indigo-500">
+                      {p.name}
                     </Link>
-                    <div style={{ fontSize: 13, color: "#555" }}>{p.members?.length || 0} member(s)</div>
+                    <div className="text-gray-500 text-sm">{p.members?.length || 0} member(s)</div>
                   </div>
-
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 12, marginBottom: 6 }}>{prog.pct}% done</div>
-                    <div style={{ width: 120, height: 8, background: "#eee", borderRadius: 6 }}>
+                  <div className="text-right">
+                    <div className="text-sm mb-1">{prog.pct}% done</div>
+                    <div className="w-28 h-2 bg-gray-200 rounded-full">
                       <div
-                        style={{
-                          width: `${prog.pct}%`,
-                          height: "100%",
-                          borderRadius: 6,
-                          background: "#4f46e5",
-                        }}
+                        className="h-full rounded-full bg-indigo-500 transition-all duration-500"
+                        style={{ width: `${prog.pct}%` }}
                       />
                     </div>
                   </div>
                 </div>
 
-                <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+                {/* Actions */}
+                <div className="flex flex-wrap gap-2 mt-4">
                   <Link to={`/project/${p._id}`}>
-                    <button style={{ padding: "6px 10px" }}>Open</button>
+                    <button className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg transition-transform transform hover:scale-105">
+                      Open
+                    </button>
                   </Link>
 
                   {addMemberProject === p._id ? (
@@ -188,17 +191,29 @@ export default function Dashboard() {
                         placeholder="member@example.com"
                         value={memberEmail}
                         onChange={(e) => setMemberEmail(e.target.value)}
-                        style={{ padding: 6, flex: 1 }}
+                        className="px-3 py-1 border border-gray-300 rounded-lg flex-1 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 outline-none transition"
                       />
-                      <button onClick={() => handleAddMember(p._id)} style={{ padding: "6px 10px" }}>
+                      <button
+                        onClick={() => handleAddMember(p._id)}
+                        className="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded-lg transition-transform transform hover:scale-105"
+                      >
                         Add
                       </button>
-                      <button onClick={() => { setAddMemberProject(null); setMemberEmail(""); }} style={{ padding: "6px 10px" }}>
+                      <button
+                        onClick={() => {
+                          setAddMemberProject(null);
+                          setMemberEmail("");
+                        }}
+                        className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-3 py-1 rounded-lg transition-transform transform hover:scale-105"
+                      >
                         Cancel
                       </button>
                     </>
                   ) : (
-                    <button onClick={() => setAddMemberProject(p._id)} style={{ padding: "6px 10px" }}>
+                    <button
+                      onClick={() => setAddMemberProject(p._id)}
+                      className="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded-lg transition-transform transform hover:scale-105"
+                    >
                       Add Member
                     </button>
                   )}
